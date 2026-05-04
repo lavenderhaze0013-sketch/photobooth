@@ -540,12 +540,12 @@
             const dateStr = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
             
             ctx.fillStyle = "#333333";
-            ctx.font = "16px TMoneyDungunbaram";
+            ctx.font = "12px TMoneyDungunbaram";
             ctx.textAlign = "center";
             
             for (let side = 0; side < 2; side++) {
                 const offsetX = side * stripWidth;
-                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 40);
+                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 20);
             }
         }
 
