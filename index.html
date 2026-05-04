@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수월중학교 포토부스</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* TMoneyDungunbaram 폰트 설정 */
+        @font-face {
+            font-family: 'TMoneyDungunbaram';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindRegular.woff') format('woff');
+            font-weight: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'TMoneyDungunbaram';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-07@1.0/TmoneyRoundWindExtraBold.woff') format('woff');
+            font-weight: 800;
+            font-display: swap;
+        }
+
+        body {
+            font-family: 'TMoneyDungunbaram', sans-serif;
+            background-color: #fffbeb;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .cute-card {
+            border-radius: 2rem;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        .cute-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .cute-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* 프린트 설정 영역 */
+        #print-area { display: none; }
+        
+        @media print {
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
+            #print-area {
+                display: block !important;
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100vw;
+                height: 100vh;
+                margin: 0;
+                padding: 0;
+                background: white;
+                z-index: 9999;
+            }
+            #print-area img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            @page {
+                size: 4in 6in portrait;
+                margin: 0;
+            }
+        }
+
+        video { transform: scaleX(-1); } /* 거울 효과 */
+        .frame-choice.selected {
+            border-color: #f472b6;
+            background-color: #fdf2f8;
+            transform: translateY(-5px);
+        }
+        
+        /* 알림 메시지 박스 스타일 */
+        #custom-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            display: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- 커스텀 메시지 박스 -->
+    <div id="custom-alert" class="bg-pink-500 text-white px-8 py-4 rounded-full shadow-2xl font-bold text-xl">
+        메시지 내용
+    </div>
+
+    <!-- 메인 앱 컨테이너 -->
+    <div id="app-container" class="w-full max-w-4xl bg-white cute-card border-8 border-yellow-300 p-8 relative">
+        
+        <!-- 관리자 버튼 -->
+        <button onclick="openAdmin()" class="absolute top-6 right-6 text-yellow-500 hover:text-yellow-600 z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+
+        <!-- [Step 1] 학번 입력 -->
+        <div id="step-id" class="text-center space-y-8 py-10">
+            <h1 class="text-5xl font-extrabold text-yellow-500">📸수월중학교 포토부스📸</h1>
+            <p class="text-2xl text-gray-500 font-bold">안녕! 대표 학생의 학번을 입력해줘!</p>
+            <div class="max-w-xs mx-auto">
+                <input type="text" id="student-id" maxlength="5" placeholder="30301" 
+                    class="w-full text-4xl text-center p-4 border-4 border-yellow-200 rounded-3xl outline-none focus:border-yellow-400 font-bold text-yellow-700">
+            </div>
+            <button onclick="goToPeopleSelection()" class="cute-btn bg-pink-400 text-white text-3xl px-12 py-4 rounded-full font-bold shadow-lg">
+                다음으로!
+            </button>
+        </div>
+
+        <!-- [Step 1-2] 인원 수 선택 -->
+        <div id="step-people" class="hidden text-center space-y-8 py-10">
+            <h2 class="text-4xl font-extrabold text-blue-500">인원 수가 몇 명이야?</h2>
+            <p class="text-xl text-gray-500 font-bold">인원 수에 맞춰 인쇄 매수가 정해져요!</p>
+            <div class="max-w-xs mx-auto">
+                <input type="number" id="people-count" min="1" max="10" value="1" 
+                    class="w-full text-5xl text-center p-4 border-4 border-blue-200 rounded-3xl outline-none focus:border-blue-400 font-bold text-blue-700">
+            </div>
+            <div id="print-info-msg" class="text-2xl text-pink-500 font-bold">권장 인쇄 매수: 1매</div>
+            <div class="flex justify-center gap-4">
+                <button onclick="goBack('step-id')" class="text-gray-400 underline font-bold">뒤로가기</button>
+                <button onclick="goToFrameSelection()" class="cute-btn bg-blue-400 text-white text-3xl px-12 py-4 rounded-full font-bold shadow-lg">
+                    프레임 고르기!
+                </button>
+            </div>
+        </div>
+
+        <!-- [Step 2] 프레임 선택 -->
+        <div id="step-frame" class="hidden text-center space-y-8">
+            <h2 class="text-4xl font-extrabold text-pink-500">마음에 드는 프레임을 골라봐!</h2>
+            <div class="grid grid-cols-3 gap-6 max-w-3xl mx-auto" id="frame-container">
+                <!-- 프레임들이 동적으로 생성됨 -->
+            </div>
+            <div class="flex justify-center gap-4">
+                <button onclick="goBack('step-people')" class="text-gray-400 underline font-bold">뒤로가기</button>
+                <button onclick="startShootStep()" class="cute-btn bg-yellow-400 text-white text-2xl px-12 py-3 rounded-full font-bold shadow-lg">촬영하러 가기</button>
+            </div>
+        </div>
+
+        <!-- [Step 3] 촬영 -->
+        <div id="step-shoot" class="hidden flex flex-col items-center space-y-6">
+            <div class="relative w-full max-w-2xl bg-black rounded-3xl overflow-hidden shadow-2xl border-8 border-gray-100 aspect-video">
+                <video id="video-stream" autoplay playsinline class="w-full h-full object-cover"></video>
+                <div id="countdown-overlay" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 hidden">
+                    <span id="countdown-text" class="text-[200px] font-extrabold text-white drop-shadow-2xl">3</span>
+                </div>
+                <div id="camera-flash" class="absolute inset-0 bg-white opacity-0 transition-opacity pointer-events-none"></div>
+            </div>
+            <div class="w-full flex items-center justify-between px-4">
+                <div class="text-2xl font-bold text-gray-600">찍은 사진: <span id="photo-index" class="text-pink-500">0</span> / 4</div>
+                <button id="shoot-start-btn" onclick="beginCaptureSequence()" class="cute-btn bg-pink-500 text-white text-3xl px-16 py-4 rounded-full font-bold shadow-xl">촬영 시작!</button>
+                <div id="mini-previews" class="flex gap-2"></div>
+            </div>
+        </div>
+
+        <!-- [Step 4] 결과 -->
+        <div id="step-result" class="hidden text-center space-y-6">
+            <h2 class="text-4xl font-extrabold text-green-500">짜잔! 오늘의 추억이 기록되었어! ✨</h2>
+            <div class="flex justify-center">
+                <canvas id="final-canvas" class="max-w-full max-h-[70vh] w-auto h-auto shadow-2xl rounded-lg border-4 border-gray-50"></canvas>
+            </div>
+            <div id="print-notice" class="text-2xl font-extrabold text-pink-500 animate-pulse">총 <span id="final-print-count">1</span>매를 인쇄하세요!</div>
+            <div class="flex justify-center gap-4">
+                <button onclick="printResult()" class="cute-btn bg-pink-500 text-white text-3xl px-16 py-4 rounded-full font-bold shadow-lg hover:bg-pink-600">인화하기 (Print)</button>
+            </div>
+            <button onclick="resetApp()" class="text-gray-400 underline font-bold">처음으로 돌아가기</button>
+        </div>
+    </div>
+
+    <!-- 관리자 모달 -->
+    <div id="admin-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-lg w-full space-y-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+            
+            <!-- 비밀번호 입력 섹션 -->
+            <div id="admin-login-section" class="space-y-6">
+                <h2 class="text-3xl font-extrabold text-center">🔐 관리자 확인</h2>
+                <div class="space-y-2">
+                    <input type="password" id="admin-password-input" placeholder="비밀번호 입력" 
+                        class="w-full text-center text-2xl p-4 border-2 border-gray-200 rounded-2xl focus:border-blue-400 outline-none">
+                    <p id="admin-error-msg" class="text-red-500 text-center text-sm hidden">비밀번호가 올바르지 않습니다!</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="verifyAdminPassword()" class="flex-1 bg-blue-500 text-white py-4 rounded-2xl font-bold text-xl">확인</button>
+                    <button onclick="closeAdmin()" class="flex-1 bg-gray-100 text-gray-500 py-4 rounded-2xl font-bold text-xl">취소</button>
+                </div>
+            </div>
+
+            <!-- 관리자 설정 섹션 -->
+            <div id="admin-settings-section" class="hidden space-y-6">
+                <h2 class="text-3xl font-extrabold border-b pb-2">⚙️ 프레임 관리</h2>
+                <p class="text-sm text-gray-500 italic">800x1200 규격의 PNG 파일을 권장합니다.</p>
+                
+                <div class="space-y-6" id="admin-frame-controls">
+                    <!-- 프레임 컨트롤이 동적으로 생성됨 -->
+                </div>
+
+                <div class="flex gap-2 pt-4 border-t">
+                    <button onclick="factoryReset()" class="bg-red-100 text-red-500 px-6 py-3 rounded-xl font-bold hover:bg-red-200">전체 초기화</button>
+                    <button onclick="closeAdmin()" class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-300">닫기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 인화용 숨겨진 영역 -->
+    <div id="print-area"></div>
+
+    <script>
+        let studentId = "";
+        let numPeople = 1;
+        let printCount = 1;
+        let selectedFrameIdx = 0;
+        let photos = [];
+        // 프레임 상태를 객체 형태로 관리 (data, name, displayName)
+        let customFrames = [
+            { data: null, name: null, displayName: "프레임 1" },
+            { data: null, name: null, displayName: "프레임 2" },
+            { data: null, name: null, displayName: "프레임 3" }
+        ];
+        const defaultColors = ["#fbcfe8", "#bae6fd", "#fef9c3"];
+        const adminColors = ["pink", "blue", "yellow"];
+
+        const video = document.getElementById('video-stream');
+        const canvas = document.getElementById('final-canvas');
+        const ctx = canvas.getContext('2d');
+
+        window.onload = () => {
+            const savedFrames = localStorage.getItem('schoolBoothFrames');
+            if (savedFrames) {
+                try { 
+                    const parsed = JSON.parse(savedFrames);
+                    customFrames = parsed.map((f, i) => ({
+                        data: f ? (f.data || null) : null,
+                        name: f ? (f.name || null) : null,
+                        displayName: f ? (f.displayName || `프레임 ${i+1}`) : `프레임 ${i+1}`
+                    }));
+                } catch(e) { 
+                    console.error("Data load error", e);
+                }
+            }
+            
+            const savedIdx = localStorage.getItem('selectedFrameIdx');
+            if (savedIdx !== null) {
+                selectedFrameIdx = parseInt(savedIdx);
+            }
+
+            renderFrameChoices();
+
+            document.getElementById('people-count').addEventListener('input', function(e) {
+                const count = parseInt(e.target.value) || 1;
+                numPeople = count;
+                updatePrintCount();
+            });
+        };
+
+        function resetApp() {
+            studentId = "";
+            numPeople = 1;
+            printCount = 1;
+            photos = [];
+            
+            // UI 초기화
+            document.getElementById('student-id').value = "";
+            document.getElementById('people-count').value = 1;
+            document.getElementById('mini-previews').innerHTML = "";
+            document.getElementById('photo-index').innerText = "0";
+            
+            // 촬영 버튼 활성화 (중요!)
+            const shootBtn = document.getElementById('shoot-start-btn');
+            shootBtn.disabled = false;
+            shootBtn.classList.remove('opacity-50');
+            
+            updatePrintCount();
+            showStep('step-id');
+            showMessage("처음으로 돌아왔습니다. 다음 촬영을 시작하세요!");
+        }
+
+        function factoryReset() {
+            if(confirm("모든 프레임 이미지와 설정을 초기화할까요?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        function showMessage(msg) {
+            const el = document.getElementById('custom-alert');
+            el.innerText = msg;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 2500);
+        }
+
+        function updatePrintCount() {
+            if (numPeople <= 2) printCount = 1;
+            else if (numPeople <= 4) printCount = 2;
+            else if (numPeople <= 6) printCount = 3;
+            else printCount = Math.ceil(numPeople / 2);
+            document.getElementById('print-info-msg').innerText = `권장 인쇄 매수: ${printCount}매`;
+            document.getElementById('final-print-count').innerText = printCount;
+        }
+
+        function openAdmin() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            document.getElementById('admin-login-section').classList.remove('hidden');
+            document.getElementById('admin-settings-section').classList.add('hidden');
+            document.getElementById('admin-password-input').value = "";
+            document.getElementById('admin-error-msg').classList.add('hidden');
+        }
+
+        function verifyAdminPassword() {
+            const input = document.getElementById('admin-password-input').value;
+            if (input === "2026") {
+                document.getElementById('admin-login-section').classList.add('hidden');
+                document.getElementById('admin-settings-section').classList.remove('hidden');
+                renderAdminFrameControls();
+            } else {
+                document.getElementById('admin-error-msg').classList.remove('hidden');
+            }
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function renderAdminFrameControls() {
+            const container = document.getElementById('admin-frame-controls');
+            container.innerHTML = '';
+            
+            customFrames.forEach((frame, idx) => {
+                const div = document.createElement('div');
+                div.className = `p-4 bg-${adminColors[idx]}-50 rounded-2xl border-2 border-${adminColors[idx]}-100 flex flex-col gap-3`;
+                const fileName = (frame && frame.name) ? frame.name : "설정된 파일 없음";
+                const currentDisplayName = (frame && frame.displayName) ? frame.displayName : `프레임 ${idx+1}`;
+                
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <label class="font-bold text-gray-700">슬롯 ${idx + 1} (${adminColors[idx] === 'pink' ? '분홍' : adminColors[idx] === 'blue' ? '파랑' : '노랑'})</label>
+                        ${(frame && frame.data) ? `<button onclick="deleteFrame(${idx})" class="text-red-500 text-xs font-bold underline">파일 삭제</button>` : ''}
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-xs text-gray-500 font-bold">프레임 이름 설정:</p>
+                        <input type="text" value="${currentDisplayName}" oninput="updateFrameName(${idx}, this.value)" 
+                            class="w-full p-2 text-sm border rounded-lg focus:border-blue-400 outline-none" placeholder="프레임 이름을 입력하세요">
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-xs text-gray-500 font-bold">배경 이미지(PNG):</p>
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="file-input-${idx}" accept="image/png" onchange="handleFileUpload(${idx})" 
+                                class="text-xs flex-1 file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:bg-white file:text-gray-700 border rounded-lg p-1">
+                        </div>
+                        <p class="text-[10px] text-gray-400 truncate">현재 파일: ${fileName}</p>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateFrameName(idx, newName) {
+            customFrames[idx].displayName = newName || `프레임 ${idx+1}`;
+            localStorage.setItem('schoolBoothFrames', JSON.stringify(customFrames));
+            renderFrameChoices();
+        }
+
+        function handleFileUpload(idx) {
+            const fileInput = document.getElementById(`file-input-${idx}`);
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    customFrames[idx].data = e.target.result;
+                    customFrames[idx].name = file.name;
+                    localStorage.setItem('schoolBoothFrames', JSON.stringify(customFrames));
+                    renderFrameChoices();
+                    renderAdminFrameControls();
+                    showMessage(`이미지가 업로드되었습니다!`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function deleteFrame(idx) {
+            if(confirm(`프레임 ${idx + 1}의 이미지를 삭제할까요?`)) {
+                customFrames[idx].data = null;
+                customFrames[idx].name = null;
+                localStorage.setItem('schoolBoothFrames', JSON.stringify(customFrames));
+                renderFrameChoices();
+                renderAdminFrameControls();
+                showMessage("프레임 이미지가 삭제되었습니다.");
+            }
+        }
+
+        function showStep(stepId) {
+            ['step-id', 'step-people', 'step-frame', 'step-shoot', 'step-result'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(stepId).classList.remove('hidden');
+        }
+
+        function goBack(id) { showStep(id); }
+
+        function goToPeopleSelection() {
+            const input = document.getElementById('student-id').value.trim();
+            if (input.length < 3) {
+                const inputEl = document.getElementById('student-id');
+                inputEl.classList.add('border-red-400');
+                setTimeout(() => inputEl.classList.remove('border-red-400'), 1000);
+                showMessage("학번을 3자 이상 입력해주세요!");
+                return;
+            }
+            studentId = input;
+            showStep('step-people');
+        }
+
+        function goToFrameSelection() { showStep('step-frame'); }
+
+        function renderFrameChoices() {
+            const container = document.getElementById('frame-container');
+            container.innerHTML = '';
+            for(let i=0; i<3; i++) {
+                const frame = customFrames[i];
+                const div = document.createElement('div');
+                div.className = `frame-choice cursor-pointer border-4 border-transparent p-2 rounded-2xl transition hover:bg-gray-50 flex flex-col items-center ${selectedFrameIdx === i ? 'selected' : ''}`;
+                div.onclick = () => {
+                    selectedFrameIdx = i;
+                    localStorage.setItem('selectedFrameIdx', selectedFrameIdx);
+                    renderFrameChoices();
+                };
+                
+                const preview = document.createElement('div');
+                preview.className = "h-48 w-full rounded-lg flex items-center justify-center overflow-hidden bg-gray-100 border relative mb-2 shadow-inner";
+                
+                if (frame && frame.data) {
+                    preview.innerHTML = `<img src="${frame.data}" class="w-full h-full object-contain">`;
+                } else {
+                    preview.style.backgroundColor = defaultColors[i];
+                    preview.innerHTML = `<span class="text-gray-400 font-bold opacity-30">IMAGE</span>`;
+                }
+                
+                const label = document.createElement('div');
+                label.className = "text-lg font-bold text-gray-700";
+                label.innerText = (frame && frame.displayName) ? frame.displayName : `프레임 ${i+1}`;
+                
+                div.appendChild(preview);
+                div.appendChild(label);
+                container.appendChild(div);
+            }
+        }
+
+        async function startShootStep() {
+            showStep('step-shoot');
+            // 촬영 페이지 들어올 때마다 버튼 상태 체크 및 복구
+            const shootBtn = document.getElementById('shoot-start-btn');
+            shootBtn.disabled = false;
+            shootBtn.classList.remove('opacity-50');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 1280, height: 720 }, 
+                    audio: false 
+                });
+                video.srcObject = stream;
+            } catch (err) {
+                showMessage("카메라를 사용할 수 없습니다. 권한을 확인해주세요.");
+            }
+        }
+
+        function beginCaptureSequence() {
+            photos = [];
+            const btn = document.getElementById('shoot-start-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            document.getElementById('mini-previews').innerHTML = '';
+            
+            let currentShot = 0;
+            const takeNext = () => {
+                if (currentShot >= 4) { finishShooting(); return; }
+                let timer = 3;
+                const overlay = document.getElementById('countdown-overlay');
+                const text = document.getElementById('countdown-text');
+                overlay.classList.remove('hidden');
+                text.innerText = timer;
+                const interval = setInterval(() => {
+                    timer--;
+                    if (timer > 0) { text.innerText = timer; } 
+                    else {
+                        clearInterval(interval);
+                        overlay.classList.add('hidden');
+                        capturePhoto();
+                        currentShot++;
+                        document.getElementById('photo-index').innerText = currentShot;
+                        setTimeout(takeNext, 1000);
+                    }
+                }, 1000);
+            };
+            takeNext();
+        }
+
+        function capturePhoto() {
+            const flash = document.getElementById('camera-flash');
+            flash.style.opacity = '1';
+            setTimeout(() => flash.style.opacity = '0', 100);
+            const tempCanvas = document.createElement('canvas');
+            const targetRatio = 4/3; 
+            const vHeight = video.videoHeight;
+            const vWidth = video.videoWidth;
+            let captureHeight = vHeight;
+            let captureWidth = vHeight * targetRatio;
+            let startX = (vWidth - captureWidth) / 2;
+            tempCanvas.width = 800; tempCanvas.height = 600;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.translate(tempCanvas.width, 0);
+            tempCtx.scale(-1, 1);
+            tempCtx.drawImage(video, startX, 0, captureWidth, captureHeight, 0, 0, tempCanvas.width, tempCanvas.height);
+            const dataUrl = tempCanvas.toDataURL('image/png');
+            photos.push(dataUrl);
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.className = "w-16 h-12 object-cover rounded border-2 border-pink-400";
+            document.getElementById('mini-previews').appendChild(img);
+        }
+
+        async function finishShooting() {
+            const stream = video.srcObject;
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            await renderFinalCanvas();
+            showStep('step-result');
+            saveFile();
+            showMessage("사진이 자동으로 저장되었습니다!");
+        }
+
+        async function renderFinalCanvas() {
+            canvas.width = 800;
+            canvas.height = 1200;
+
+            const currentFrame = customFrames[selectedFrameIdx];
+            ctx.fillStyle = defaultColors[selectedFrameIdx];
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const stripWidth = 400; 
+            const topMargin = 60; 
+            const footerHeight = 160; 
+            const gap = 25;
+            
+            const availableHeight = canvas.height - topMargin - footerHeight - (gap * 3);
+            const drawH = availableHeight / 4;
+            const drawW = (drawH / 3) * 4; 
+            const centerOffsetX = (stripWidth - drawW) / 2;
+
+            for (let side = 0; side < 2; side++) {
+                const offsetX = side * stripWidth;
+                for (let i = 0; i < 4; i++) {
+                    const img = await loadImage(photos[i]);
+                    const y = topMargin + (i * (drawH + gap));
+                    ctx.drawImage(img, offsetX + centerOffsetX, y, drawW, drawH);
+                }
+            }
+
+            if (currentFrame && currentFrame.data) {
+                const frameImg = await loadImage(currentFrame.data);
+                ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
+            }
+
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
+            
+            ctx.fillStyle = "#333333";
+            ctx.font = "16px TMoneyDungunbaram";
+            ctx.textAlign = "center";
+            
+            for (let side = 0; side < 2; side++) {
+                const offsetX = side * stripWidth;
+                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 40);
+            }
+        }
+
+        function loadImage(src) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = src;
+                img.onload = () => resolve(img);
+            });
+        }
+
+        function saveFile() {
+            const link = document.createElement('a');
+            link.download = `${studentId}_수월중_포토부스.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function printResult() {
+            const printArea = document.getElementById('print-area');
+            printArea.innerHTML = '';
+            const printImg = new Image();
+            printImg.src = canvas.toDataURL('image/png');
+            printImg.onload = () => {
+                printArea.appendChild(printImg);
+                const confirmMsg = `학생이 ${numPeople}명이므로,\n인쇄 설정에서 '매수'를 [ ${printCount} ]매로 설정해주세요!`;
+                if(confirm(confirmMsg)) { setTimeout(() => { window.print(); }, 500); }
+            };
+        }
+    </script>
+</body>
+</html>
