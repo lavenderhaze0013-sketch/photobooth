@@ -240,6 +240,7 @@
             if (savedFrames) {
                 try { 
                     const parsed = JSON.parse(savedFrames);
+                    // 기존 데이터와 호환성 유지 및 displayName 기본값 설정
                     customFrames = parsed.map((f, i) => ({
                         data: f ? (f.data || null) : null,
                         name: f ? (f.name || null) : null,
@@ -436,18 +437,19 @@
                     renderFrameChoices();
                 };
                 
+                // 프레임 미리보기 비율을 세로형(3:4)으로 설정
                 const preview = document.createElement('div');
-                preview.className = "h-48 w-full rounded-lg flex items-center justify-center overflow-hidden bg-gray-100 border relative mb-2 shadow-inner";
+                preview.className = "aspect-[3/4] w-full rounded-lg flex items-center justify-center overflow-hidden bg-gray-100 border relative mb-2 shadow-inner";
                 
                 if (frame && frame.data) {
                     preview.innerHTML = `<img src="${frame.data}" class="w-full h-full object-contain">`;
                 } else {
                     preview.style.backgroundColor = defaultColors[i];
-                    preview.innerHTML = `<span class="text-gray-400 font-bold opacity-30">IMAGE</span>`;
+                    preview.innerHTML = `<span class="text-gray-400 font-bold opacity-30 text-xs text-center px-1">기본 배경<br>${frame.displayName}</span>`;
                 }
                 
                 const label = document.createElement('div');
-                label.className = "text-lg font-bold text-gray-700";
+                label.className = "text-lg font-bold text-gray-700 truncate w-full text-center";
                 label.innerText = (frame && frame.displayName) ? frame.displayName : `프레임 ${i+1}`;
                 
                 div.appendChild(preview);
@@ -543,6 +545,8 @@
             canvas.height = 1200;
 
             const currentFrame = customFrames[selectedFrameIdx];
+
+            // 1. 기본 배경색 채우기
             ctx.fillStyle = defaultColors[selectedFrameIdx];
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -556,6 +560,7 @@
             const drawW = (drawH / 3) * 4; 
             const centerOffsetX = (stripWidth - drawW) / 2;
 
+            // 2. 사진 먼저 그리기 (아래 레이어)
             for (let side = 0; side < 2; side++) {
                 const offsetX = side * stripWidth;
                 for (let i = 0; i < 4; i++) {
@@ -565,11 +570,13 @@
                 }
             }
 
+            // 3. 프레임 이미지를 사진 위에 덮기 (위 레이어)
             if (currentFrame && currentFrame.data) {
                 const frameImg = await loadImage(currentFrame.data);
                 ctx.drawImage(frameImg, 0, 0, canvas.width, canvas.height);
             }
 
+            // 4. 날짜 텍스트 삽입 (하단 작게)
             const now = new Date();
             const dateStr = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
             
