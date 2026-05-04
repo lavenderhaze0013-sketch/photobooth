@@ -114,26 +114,9 @@
                 <input type="text" id="student-id" maxlength="5" placeholder="30301" 
                     class="w-full text-4xl text-center p-4 border-4 border-yellow-200 rounded-3xl outline-none focus:border-yellow-400 font-bold text-yellow-700">
             </div>
-            <button onclick="goToPeopleSelection()" class="cute-btn bg-pink-400 text-white text-3xl px-12 py-4 rounded-full font-bold shadow-lg">
-                다음으로!
+            <button onclick="goToFrameSelectionFromId()" class="cute-btn bg-pink-400 text-white text-3xl px-12 py-4 rounded-full font-bold shadow-lg">
+                시작하기!
             </button>
-        </div>
-
-        <!-- [Step 1-2] 인원 수 선택 -->
-        <div id="step-people" class="hidden text-center space-y-8 py-10">
-            <h2 class="text-4xl font-extrabold text-blue-500">인원 수가 몇 명이야?</h2>
-            <p class="text-xl text-gray-500 font-bold">인원 수에 맞춰 인쇄 매수가 정해져요!</p>
-            <div class="max-w-xs mx-auto">
-                <input type="number" id="people-count" min="1" max="10" value="1" 
-                    class="w-full text-5xl text-center p-4 border-4 border-blue-200 rounded-3xl outline-none focus:border-blue-400 font-bold text-blue-700">
-            </div>
-            <div id="print-info-msg" class="text-2xl text-pink-500 font-bold">권장 인쇄 매수: 1매</div>
-            <div class="flex justify-center gap-4">
-                <button onclick="goBack('step-id')" class="text-gray-400 underline font-bold">뒤로가기</button>
-                <button onclick="goToFrameSelection()" class="cute-btn bg-blue-400 text-white text-3xl px-12 py-4 rounded-full font-bold shadow-lg">
-                    프레임 고르기!
-                </button>
-            </div>
         </div>
 
         <!-- [Step 2] 프레임 선택 -->
@@ -143,7 +126,7 @@
                 <!-- 프레임들이 동적으로 생성됨 -->
             </div>
             <div class="flex justify-center gap-4">
-                <button onclick="goBack('step-people')" class="text-gray-400 underline font-bold">뒤로가기</button>
+                <button onclick="goBack('step-id')" class="text-gray-400 underline font-bold">뒤로가기</button>
                 <button onclick="startShootStep()" class="cute-btn bg-yellow-400 text-white text-2xl px-12 py-3 rounded-full font-bold shadow-lg">촬영하러 가기</button>
             </div>
         </div>
@@ -170,7 +153,6 @@
             <div class="flex justify-center">
                 <canvas id="final-canvas" class="max-w-full max-h-[70vh] w-auto h-auto shadow-2xl rounded-lg border-4 border-gray-50"></canvas>
             </div>
-            <div id="print-notice" class="text-2xl font-extrabold text-pink-500 animate-pulse">총 <span id="final-print-count">1</span>매를 인쇄하세요!</div>
             <div class="flex justify-center gap-4">
                 <button onclick="printResult()" class="cute-btn bg-pink-500 text-white text-3xl px-16 py-4 rounded-full font-bold shadow-lg hover:bg-pink-600">인화하기 (Print)</button>
             </div>
@@ -218,8 +200,6 @@
 
     <script>
         let studentId = "";
-        let numPeople = 1;
-        let printCount = 1;
         let selectedFrameIdx = 0;
         let photos = [];
         // 프레임 상태를 객체 형태로 관리 (data, name, displayName)
@@ -240,7 +220,6 @@
             if (savedFrames) {
                 try { 
                     const parsed = JSON.parse(savedFrames);
-                    // 기존 데이터와 호환성 유지 및 displayName 기본값 설정
                     customFrames = parsed.map((f, i) => ({
                         data: f ? (f.data || null) : null,
                         name: f ? (f.name || null) : null,
@@ -257,32 +236,22 @@
             }
 
             renderFrameChoices();
-
-            document.getElementById('people-count').addEventListener('input', function(e) {
-                const count = parseInt(e.target.value) || 1;
-                numPeople = count;
-                updatePrintCount();
-            });
         };
 
         function resetApp() {
             studentId = "";
-            numPeople = 1;
-            printCount = 1;
             photos = [];
             
             // UI 초기화
             document.getElementById('student-id').value = "";
-            document.getElementById('people-count').value = 1;
             document.getElementById('mini-previews').innerHTML = "";
             document.getElementById('photo-index').innerText = "0";
             
-            // 촬영 버튼 활성화 (중요!)
+            // 촬영 버튼 활성화
             const shootBtn = document.getElementById('shoot-start-btn');
             shootBtn.disabled = false;
             shootBtn.classList.remove('opacity-50');
             
-            updatePrintCount();
             showStep('step-id');
             showMessage("처음으로 돌아왔습니다. 다음 촬영을 시작하세요!");
         }
@@ -299,15 +268,6 @@
             el.innerText = msg;
             el.style.display = 'block';
             setTimeout(() => { el.style.display = 'none'; }, 2500);
-        }
-
-        function updatePrintCount() {
-            if (numPeople <= 2) printCount = 1;
-            else if (numPeople <= 4) printCount = 2;
-            else if (numPeople <= 6) printCount = 3;
-            else printCount = Math.ceil(numPeople / 2);
-            document.getElementById('print-info-msg').innerText = `권장 인쇄 매수: ${printCount}매`;
-            document.getElementById('final-print-count').innerText = printCount;
         }
 
         function openAdmin() {
@@ -401,7 +361,7 @@
         }
 
         function showStep(stepId) {
-            ['step-id', 'step-people', 'step-frame', 'step-shoot', 'step-result'].forEach(id => {
+            ['step-id', 'step-frame', 'step-shoot', 'step-result'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(stepId).classList.remove('hidden');
@@ -409,7 +369,7 @@
 
         function goBack(id) { showStep(id); }
 
-        function goToPeopleSelection() {
+        function goToFrameSelectionFromId() {
             const input = document.getElementById('student-id').value.trim();
             if (input.length < 3) {
                 const inputEl = document.getElementById('student-id');
@@ -419,10 +379,8 @@
                 return;
             }
             studentId = input;
-            showStep('step-people');
+            showStep('step-frame');
         }
-
-        function goToFrameSelection() { showStep('step-frame'); }
 
         function renderFrameChoices() {
             const container = document.getElementById('frame-container');
@@ -437,7 +395,6 @@
                     renderFrameChoices();
                 };
                 
-                // 프레임 미리보기 비율을 세로형(3:4)으로 설정
                 const preview = document.createElement('div');
                 preview.className = "aspect-[3/4] w-full rounded-lg flex items-center justify-center overflow-hidden bg-gray-100 border relative mb-2 shadow-inner";
                 
@@ -460,7 +417,6 @@
 
         async function startShootStep() {
             showStep('step-shoot');
-            // 촬영 페이지 들어올 때마다 버튼 상태 체크 및 복구
             const shootBtn = document.getElementById('shoot-start-btn');
             shootBtn.disabled = false;
             shootBtn.classList.remove('opacity-50');
@@ -612,8 +568,9 @@
             printImg.src = canvas.toDataURL('image/png');
             printImg.onload = () => {
                 printArea.appendChild(printImg);
-                const confirmMsg = `학생이 ${numPeople}명이므로,\n인쇄 설정에서 '매수'를 [ ${printCount} ]매로 설정해주세요!`;
-                if(confirm(confirmMsg)) { setTimeout(() => { window.print(); }, 500); }
+                setTimeout(() => {
+                    window.print();
+                }, 500);
             };
         }
     </script>
