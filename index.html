@@ -41,7 +41,7 @@
             transform: scale(0.95);
         }
         
-        /* 프린트 설정 영역 */
+        /* 프린트 설정 영역 (A5 규격 반영) */
         #print-area { display: none; }
         
         @media print {
@@ -65,7 +65,7 @@
                 object-fit: contain;
             }
             @page {
-                size: 4in 6in portrait;
+                size: A5 portrait;
                 margin: 0;
             }
         }
@@ -184,7 +184,7 @@
             <!-- 관리자 설정 섹션 -->
             <div id="admin-settings-section" class="hidden space-y-6">
                 <h2 class="text-3xl font-extrabold border-b pb-2">⚙️ 프레임 관리</h2>
-                <p class="text-sm text-gray-500 italic">800x1200 규격의 PNG 파일을 권장합니다.</p>
+                <p class="text-sm text-gray-500 italic">1000x1414 규격의 PNG 파일을 권장합니다. (A5 비율)</p>
                 
                 <div class="space-y-6" id="admin-frame-controls">
                     <!-- 프레임 컨트롤이 동적으로 생성됨 -->
@@ -477,13 +477,17 @@
             let captureHeight = vHeight;
             let captureWidth = vHeight * targetRatio;
             let startX = (vWidth - captureWidth) / 2;
-            tempCanvas.width = 800; tempCanvas.height = 600;
+
+            tempCanvas.width = 800; 
+            tempCanvas.height = 600;
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.translate(tempCanvas.width, 0);
             tempCtx.scale(-1, 1);
             tempCtx.drawImage(video, startX, 0, captureWidth, captureHeight, 0, 0, tempCanvas.width, tempCanvas.height);
+            
             const dataUrl = tempCanvas.toDataURL('image/png');
             photos.push(dataUrl);
+
             const img = document.createElement('img');
             img.src = dataUrl;
             img.className = "w-16 h-12 object-cover rounded border-2 border-pink-400";
@@ -500,8 +504,9 @@
         }
 
         async function renderFinalCanvas() {
-            canvas.width = 800;
-            canvas.height = 1200;
+            // A5 규격 비율 (1:1.414) 반영
+            canvas.width = 1000;
+            canvas.height = 1414;
 
             const currentFrame = customFrames[selectedFrameIdx];
 
@@ -509,10 +514,10 @@
             ctx.fillStyle = defaultColors[selectedFrameIdx];
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const stripWidth = 400; 
-            const topMargin = 60; 
-            const footerHeight = 160; 
-            const gap = 25;
+            const stripWidth = 500; // 가로의 절반
+            const topMargin = 70; 
+            const footerHeight = 180; 
+            const gap = 30;
             
             const availableHeight = canvas.height - topMargin - footerHeight - (gap * 3);
             const drawH = availableHeight / 4;
@@ -540,12 +545,12 @@
             const dateStr = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
             
             ctx.fillStyle = "#333333";
-            ctx.font = "12px TMoneyDungunbaram";
+            ctx.font = "14px TMoneyDungunbaram";
             ctx.textAlign = "center";
             
             for (let side = 0; side < 2; side++) {
                 const offsetX = side * stripWidth;
-                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 20);
+                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 30);
             }
         }
 
@@ -559,7 +564,7 @@
 
         function saveFile() {
             const link = document.createElement('a');
-            link.download = `${studentId}_수월중_포토부스.png`;
+            link.download = `${studentId}_수월중_A5_포토.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         }
