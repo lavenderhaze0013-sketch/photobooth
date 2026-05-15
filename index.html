@@ -184,7 +184,7 @@
             <!-- 관리자 설정 섹션 -->
             <div id="admin-settings-section" class="hidden space-y-6">
                 <h2 class="text-3xl font-extrabold border-b pb-2">⚙️ 프레임 관리</h2>
-                <p class="text-sm text-gray-500 italic">1000x1414 규격의 PNG 파일을 권장합니다. (A5 비율)</p>
+                <p class="text-sm text-gray-500 italic">1748x2480 규격의 고화질 PNG 파일을 권장합니다. (A5 300DPI 비율)</p>
                 
                 <div class="space-y-6" id="admin-frame-controls">
                     <!-- 프레임 컨트롤이 동적으로 생성됨 -->
@@ -504,9 +504,9 @@
         }
 
         async function renderFinalCanvas() {
-            // A5 규격 비율 (1:1.414) 반영
-            canvas.width = 1000;
-            canvas.height = 1414;
+            // A5 규격 300 DPI 해상도 반영 (1:1.418 비율)
+            canvas.width = 1748;
+            canvas.height = 2480;
 
             const currentFrame = customFrames[selectedFrameIdx];
 
@@ -514,10 +514,10 @@
             ctx.fillStyle = defaultColors[selectedFrameIdx];
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const stripWidth = 500; // 가로의 절반
-            const topMargin = 70; 
-            const footerHeight = 180; 
-            const gap = 30;
+            const stripWidth = 874; // 가로의 절반 (1748 / 2)
+            const topMargin = 122; 
+            const footerHeight = 315; 
+            const gap = 52;
             
             const availableHeight = canvas.height - topMargin - footerHeight - (gap * 3);
             const drawH = availableHeight / 4;
@@ -545,12 +545,12 @@
             const dateStr = `${now.getFullYear()}. ${String(now.getMonth() + 1).padStart(2, '0')}. ${String(now.getDate()).padStart(2, '0')}.`;
             
             ctx.fillStyle = "#333333";
-            ctx.font = "14px TMoneyDungunbaram";
+            ctx.font = "26px TMoneyDungunbaram";
             ctx.textAlign = "center";
             
             for (let side = 0; side < 2; side++) {
                 const offsetX = side * stripWidth;
-                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 30);
+                ctx.fillText(dateStr, offsetX + stripWidth / 2, canvas.height - 60);
             }
         }
 
